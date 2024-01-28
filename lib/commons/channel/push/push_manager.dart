@@ -72,6 +72,7 @@ class PushManager extends ChangeNotifier {
   // 在用户同意隐私协议后，开启个推
   // TODO: iOS逻辑还可以完善
   Future<void> initGeTuiSdk() async {
+
     if (Platform.isAndroid) {
       try {
         final result = await _pushChannel.invokeMethod<String>("initGeTuiSdk");
@@ -107,12 +108,14 @@ class PushManager extends ChangeNotifier {
             break;
         }
       } catch (e) {
-        // TODO
+        ///如果出现错误
+        var a = 1+1;
       }
     } else if (Platform.isIOS) {
       final canPush = await Permission.notification.isGranted;
       if (!canPush) showRequestNotificationDialog();
     }
+
   }
 
   // 在设置里，可以手动打开推送

@@ -32,80 +32,114 @@ class HomePage extends StatefulWidget {
 ///这里是微北洋主页面
 class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   /// bottomNavigationBar对应的分页
-  List<Widget> pages = [];
+  List<Widget> pageList = [];
   /// 现在在第几栏目
   int _currentIndex = 0;
   /// 上一次点击的时间，可以用来约束点击操作
   DateTime? _lastPressedAt;
-  /// 顶部分页控制器
+  /// 底部分页控制器
   late final TabController _tabController;
-  /// 首先，这个FeedbackHomePageState是用来管理主页的
+  /// FeedbackHomePageState用来管理主页面信息
   final feedbackKey = GlobalKey<FeedbackHomePageState>();
 
   @override
   /// 页面初始化
   void initState() {
+
     super.initState();
-    pages
+
+    ///主页面有三个页面，WBY页面，论坛页面FeedbackHomePage，个人信息页面
+    pageList
       ..add(WPYPage())
       ..add(FeedbackHomePage(key: feedbackKey))
       ..add(ProfilePage());
     _tabController = TabController(
-      length: pages.length,
+      length: pageList.length,
       vsync: this,
       initialIndex: 0,
     )..addListener(() {
+      /*这句用来检测用户切换页面，如果当前页面索引不同于之前，则更新currentIndex并更新页面*/
         if (_tabController.index != _tabController.previousIndex) {
           setState(() {
             _currentIndex = _tabController.index;
           });
         }
       });
+
+    ///当该组件渲染完成后...
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+
+      ///PushManager是一个状态管理类,其中initGeTuiSdk用来给用户弹出一个页面(是否开启个性推荐),然后这样.
+      ///PushManager类用来管理微北洋的推送信息
       context.read<PushManager>().initGeTuiSdk();
 
-      final manager = context.read<PushManager>();
-      final cid = (await manager.getCid()) ?? '';
-      final now = DateTime.now();
+      final pushManager = context.read<PushManager>();
+
+      ///userCid用来跟踪用户设备信息
+      ///nowTime获取当前时间
+      final nowCid = (await pushManager.getCid()) ?? "";
+      final nowTime = DateTime.now();
+
+      ///获取上一次的时间
+      ///CommonPreference类用于存放用户的个人偏好设置
       DateTime lastTime;
       try {
-        lastTime = DateTime.tryParse(CommonPreferences.pushTime.value)!;
-      } catch (_) {
-        lastTime = now.subtract(Duration(days: 3));
+        lastTime = DateTime.tryParse(CommonPreferences.lastPushTime.value)!;
       }
-      if (cid != CommonPreferences.pushCid.value ||
-          CommonPreferences.userNumber.value !=
-              CommonPreferences.pushUser.value ||
-          now.difference(lastTime).inDays >= 3) {
-        AuthService.updateCid(cid, onResult: (_) {
-          debugPrint('cid $cid 更新成功');
-          CommonPreferences.pushCid.value = cid;
-          CommonPreferences.pushUser.value = CommonPreferences.userNumber.value;
-          CommonPreferences.pushTime.value =
-              DateFormat('yyyy-MM-dd').format(now);
+      catch (_) {
+        lastTime = nowTime.subtract(Duration(days: 3));
+      }
+
+      ///如果设备跟上次不一样了,就更新用户信息
+      var lastPushCid = CommonPreferences.lastPushCid.value;
+      var userNumber = CommonPreferences.userNumber.value;
+      var pushUserNumber = CommonPreferences.pushUserNumber.value;
+
+      ///如果与上次登录的设备,用户id不同则更新
+      if (nowCid != lastPushCid || userNumber != pushUserNumber ||
+          nowTime.difference(lastTime).inDays >= 3) {
+
+        ///登录类更新cid信息,如果更新成功,则更新本地用户配置
+        AuthService.updateCid(nowCid, onResult: (_) {
+          debugPrint('cid $nowCid 更新成功');
+
+          CommonPreferences.lastPushCid.value = nowCid;
+          CommonPreferences.pushUserNumber.value = CommonPreferences.userNumber.value;
+          CommonPreferences.lastPushTime.value = DateFormat('yyyy-MM-dd').format(nowTime);
+
         }, onFailure: (_) {
-          debugPrint('cid $cid 更新失败');
+          debugPrint('cid $nowCid 更新失败');
         });
       }
 
+      ///更新提交时间
       var hasReport = await ReportService.getTodayHasReported();
       if (hasReport) {
         CommonPreferences.reportTime.value = DateTime.now().toString();
       } else {
         CommonPreferences.reportTime.value = '';
       }
+
       // 检查当前是否有未处理的事件
       context.findAncestorStateOfType<WePeiYangAppState>()?.checkEventList();
       // 友盟统计账号信息
       UmengCommonSdk.onProfileSignIn(CommonPreferences.account.value);
       // 刷新自习室数据
       context.read<CampusProvider>().init();
+
     });
+
     if (widget.page != null) {
       _tabController.animateTo(widget.page!);
+    } else {
+      _tabController.animateTo(0);
     }
+
+    ///等待渲染结束
+    ///进行账户升级(可能是远古需求
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (CommonPreferences.accountUpgrade.value.isNotEmpty) {
+      var accountUpgrade = CommonPreferences.accountUpgrade.value;
+      if (accountUpgrade.isNotEmpty) {
         showDialog(
           context: context,
           barrierDismissible: true,
@@ -113,12 +147,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         );
       }
     });
-  }
+
+  }//init
 
   @override
   Widget build(BuildContext context) {
+    ///WePeiYangApp是启动页面
     double width = WePeiYangApp.screenWidth / 3;
 
+    ///底部第一页面的按钮(对应到WPYPage)
     var homePage = SizedBox(
       height: 70.h,
       width: width,
@@ -137,6 +174,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       ),
     );
 
+    ///底部第二页面的按钮
     var feedbackPage = SizedBox(
       height: 70.h,
       width: width,
@@ -161,6 +199,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       ),
     );
 
+    ///底部第三页面的按钮
     var selfPage = SizedBox(
       height: 70.h,
       width: width,
@@ -179,6 +218,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       ),
     );
 
+    ///底部按钮所在区域
     var bottomNavigationBar = Container(
       decoration: BoxDecoration(
         color: ColorUtil.whiteFFColor,
@@ -195,16 +235,21 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       ),
     );
 
+    ///修改系统样式
     return AnnotatedRegion<SystemUiOverlayStyle>(
+
       value: _tabController.index == 2
           ? SystemUiOverlayStyle.light
               .copyWith(systemNavigationBarColor: ColorUtil.whiteFFColor)
           : SystemUiOverlayStyle.dark
               .copyWith(systemNavigationBarColor: ColorUtil.whiteFFColor),
+
       child: Scaffold(
         extendBody: true,
         bottomNavigationBar: bottomNavigationBar,
+
         body: WillPopScope(
+          ///实现侧滑退出
           onWillPop: () async {
             if (_tabController.index == 0) {
               if (_lastPressedAt == null ||
@@ -224,10 +269,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             }
             return true;
           },
+
+          ///底部的页面切换按钮
           child: TabBarView(
             controller: _tabController,
             physics: NeverScrollableScrollPhysics(),
-            children: pages,
+            children: pageList,
           ),
         ),
       ),

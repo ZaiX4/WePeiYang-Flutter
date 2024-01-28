@@ -121,9 +121,9 @@ class CommonPreferences {
 
   // 推送
   static final canPush = PrefsBean<bool>('can_push', false);
-  static final pushCid = PrefsBean<String>('pushCid', '');
-  static final pushUser = PrefsBean<String>('pushUser', '');
-  static final pushTime = PrefsBean<String>('pushTime', '2019-01-01');
+  static final lastPushCid = PrefsBean<String>('pushCid', '');
+  static final pushUserNumber = PrefsBean<String>('pushUser', '');
+  static final lastPushTime = PrefsBean<String>('lastPushTime', '2019-01-01');
 
   /// 清除所有缓存
   static void clearAllPrefs() {
