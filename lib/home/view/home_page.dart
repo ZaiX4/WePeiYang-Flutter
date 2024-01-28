@@ -29,15 +29,21 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
+///这里是微北洋主页面
 class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   /// bottomNavigationBar对应的分页
   List<Widget> pages = [];
+  /// 现在在第几栏目
   int _currentIndex = 0;
+  /// 上一次点击的时间，可以用来约束点击操作
   DateTime? _lastPressedAt;
+  /// 顶部分页控制器
   late final TabController _tabController;
+  /// 首先，这个FeedbackHomePageState是用来管理主页的
   final feedbackKey = GlobalKey<FeedbackHomePageState>();
 
   @override
+  /// 页面初始化
   void initState() {
     super.initState();
     pages
