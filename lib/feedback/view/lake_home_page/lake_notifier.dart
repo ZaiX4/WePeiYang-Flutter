@@ -115,7 +115,7 @@ class LakeArea {
 
 class LakeModel extends ChangeNotifier {
   LakePageStatus mainStatus = LakePageStatus.unload;
-  Map<int, LakeArea> lakeAreas = {};
+  Map<int, LakeArea> lakeAreasList = {};
   List<WPYTab> tabList = [];
   List<WPYTab> backupList = [WPYTab()];
   int currentTab = 0;
@@ -127,7 +127,7 @@ class LakeModel extends ChangeNotifier {
 
   clearAll() {
     mainStatus = LakePageStatus.unload;
-    lakeAreas.clear();
+    lakeAreasList.clear();
     tabList.clear();
     backupList = [WPYTab()];
     currentTab = 0;
@@ -150,9 +150,9 @@ class LakeModel extends ChangeNotifier {
     tabList.add(oTab);
     await FeedbackService.getTabList().then((list) {
       tabList.addAll(list);
-      lakeAreas.addAll({0: LakeArea.empty()});
+      lakeAreasList.addAll({0: LakeArea.empty()});
       list.forEach((element) {
-        lakeAreas.addAll({element.id: LakeArea.empty()});
+        lakeAreasList.addAll({element.id: LakeArea.empty()});
       });
       mainStatus = LakePageStatus.idle;
       notifyListeners();
@@ -182,14 +182,14 @@ class LakeModel extends ChangeNotifier {
 
   void fillLakeAreaAndInitPostList(
       int index, RefreshController rController, ScrollController sController) {
-    lakeAreas[index]?.clear();
+    lakeAreasList[index]?.clear();
     initPostList(index, success: () {}, failure: (e) {
       ToastProvider.error(e.error.toString());
     });
   }
 
   void quietUpdateItem(Post post, WPYTab tab) {
-    lakeAreas[tab]?.dataList.update(
+    lakeAreasList[tab]?.dataList.update(
       post.id,
       (value) {
         value.isLike = post.isLike;
@@ -205,7 +205,7 @@ class LakeModel extends ChangeNotifier {
   // 列表去重
   void _addOrUpdateItems(List<Post> data, int index) {
     data.forEach((element) {
-      lakeAreas[index]
+      lakeAreasList[index]
           ?.dataList
           .update(element.id, (value) => element, ifAbsent: () => element);
     });
@@ -217,10 +217,10 @@ class LakeModel extends ChangeNotifier {
       type: '${index}',
       searchMode: sortSeq,
       etag: index == 0 ? 'recommend' : '',
-      page: lakeAreas[index]!.currentPage + 1,
+      page: lakeAreasList[index]!.currentPage + 1,
       onSuccess: (postList, page) {
         _addOrUpdateItems(postList, index);
-        lakeAreas[index]!.currentPage += 1;
+        lakeAreasList[index]!.currentPage += 1;
         success.call();
         notifyListeners();
       },
@@ -261,7 +261,7 @@ class LakeModel extends ChangeNotifier {
   Future<void> initPostList(int index,
       {OnSuccess? success, OnFailure? failure, bool reset = false}) async {
     if (reset) {
-      lakeAreas[index]?.status = LakePageStatus.loading;
+      lakeAreasList[index]?.status = LakePageStatus.loading;
       notifyListeners();
     }
     await FeedbackService.getPosts(
@@ -271,17 +271,17 @@ class LakeModel extends ChangeNotifier {
       etag: index == 0 ? 'recommend' : '',
       onSuccess: (postList, totalPage) {
         tabControllerLoaded = true;
-        lakeAreas[index]?.dataList.clear();
+        lakeAreasList[index]?.dataList.clear();
         _addOrUpdateItems(postList, index);
-        lakeAreas[index]!.currentPage = 1;
-        lakeAreas[index]!.status = LakePageStatus.idle;
+        lakeAreasList[index]!.currentPage = 1;
+        lakeAreasList[index]!.status = LakePageStatus.idle;
         notifyListeners();
         success?.call();
       },
       onFailure: (e) {
         ToastProvider.error(e.error.toString());
         checkTokenAndInitPostList(index);
-        lakeAreas[index]!.status = LakePageStatus.error;
+        lakeAreasList[index]!.status = LakePageStatus.error;
         notifyListeners();
         failure?.call(e);
       },
