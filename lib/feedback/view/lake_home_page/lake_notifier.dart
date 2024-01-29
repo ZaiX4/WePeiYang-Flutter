@@ -90,7 +90,7 @@ enum LakePageStatus {
   error,
 }
 
-class LakeArea {
+class LakeAreaData {
   final WPYTab tab;
   Map<int, Post> dataList;
   RefreshController refreshController;
@@ -98,7 +98,7 @@ class LakeArea {
   LakePageStatus status;
   int currentPage = 1;
 
-  LakeArea.empty()
+  LakeAreaData.empty()
       : this.tab = WPYTab(),
         this.dataList = {},
         this.refreshController = RefreshController(),
@@ -114,8 +114,10 @@ class LakeArea {
 }
 
 class LakeModel extends ChangeNotifier {
+
   LakePageStatus mainStatus = LakePageStatus.unload;
-  Map<int, LakeArea> lakeAreasList = {};
+
+  Map<int, LakeAreaData> lakeAreasDataList = {};
   List<WPYTab> tabList = [];
   List<WPYTab> backupList = [WPYTab()];
   int currentTab = 0;
@@ -126,8 +128,9 @@ class LakeModel extends ChangeNotifier {
   int sortSeq = 1;
 
   clearAll() {
+
     mainStatus = LakePageStatus.unload;
-    lakeAreasList.clear();
+    lakeAreasDataList.clear();
     tabList.clear();
     backupList = [WPYTab()];
     currentTab = 0;
@@ -140,14 +143,45 @@ class LakeModel extends ChangeNotifier {
     sortSeq = 1;
   }
 
+  ///初始化顶部标签
+  ///1.28更新,添加"评分"标签与"评分"页面
+
   Future<void> initTabList() async {
-    if (mainStatus == LakePageStatus.error ||
-        mainStatus == LakePageStatus.unload)
+
+    if (mainStatus == LakePageStatus.error || mainStatus == LakePageStatus.unload) {
       mainStatus = LakePageStatus.loading;
+    }
     notifyListeners();
-    WPYTab oTab = WPYTab(id: 0, shortname: '精华', name: '精华');
-    tabList.clear();
-    tabList.add(oTab);
+
+    ///最大id
+    var maxId = 7;
+    tabList = [
+      WPYTab(id: 0, shortname: '精华', name: '精华'),
+      WPYTab(id: 1, shortname: '校务', name: '校务'),
+      WPYTab(id: 2, shortname: '湖底', name: '湖底'),
+      WPYTab(id: 3, shortname: '学习', name: '学习'),
+      WPYTab(id: 4, shortname: '交往', name: '交往'),
+      WPYTab(id: 5, shortname: '二次元', name: '二次元'),
+      WPYTab(id: 6, shortname: '摆摊', name: '摆摊'),
+
+      ///新增评分页面
+      WPYTab(id: 7, shortname: '评分', name: '评分'),
+    ];
+
+    for(var id=0 ;id<=maxId;++id){
+      lakeAreasDataList.addAll({id : LakeAreaData.empty()});
+    }
+
+    mainStatus = LakePageStatus.idle;
+    notifyListeners();
+
+    ///WPYTab oTab = WPYTab(id: 0, shortname: '精华', name: '精华');
+
+    ///tabList.clear();
+    ///tabList.add(oTab);
+
+    ///原本实现是从网络上获取标签列表,为了方便追加新的标签,因此重写原先实现
+    /*原实现
     await FeedbackService.getTabList().then((list) {
       tabList.addAll(list);
       lakeAreasList.addAll({0: LakeArea.empty()});
@@ -156,11 +190,14 @@ class LakeModel extends ChangeNotifier {
       });
       mainStatus = LakePageStatus.idle;
       notifyListeners();
-    }, onError: (e) {
+    },
+        onError: (e) {
       mainStatus = LakePageStatus.error;
       ToastProvider.error(e.error.toString());
       notifyListeners();
     });
+    */
+
   }
 
   void onFeedbackOpen() {
@@ -182,14 +219,14 @@ class LakeModel extends ChangeNotifier {
 
   void fillLakeAreaAndInitPostList(
       int index, RefreshController rController, ScrollController sController) {
-    lakeAreasList[index]?.clear();
+    lakeAreasDataList[index]?.clear();
     initPostList(index, success: () {}, failure: (e) {
       ToastProvider.error(e.error.toString());
     });
   }
 
   void quietUpdateItem(Post post, WPYTab tab) {
-    lakeAreasList[tab]?.dataList.update(
+    lakeAreasDataList[tab]?.dataList.update(
       post.id,
       (value) {
         value.isLike = post.isLike;
@@ -205,7 +242,7 @@ class LakeModel extends ChangeNotifier {
   // 列表去重
   void _addOrUpdateItems(List<Post> data, int index) {
     data.forEach((element) {
-      lakeAreasList[index]
+      lakeAreasDataList[index]
           ?.dataList
           .update(element.id, (value) => element, ifAbsent: () => element);
     });
@@ -217,10 +254,10 @@ class LakeModel extends ChangeNotifier {
       type: '${index}',
       searchMode: sortSeq,
       etag: index == 0 ? 'recommend' : '',
-      page: lakeAreasList[index]!.currentPage + 1,
+      page: lakeAreasDataList[index]!.currentPage + 1,
       onSuccess: (postList, page) {
         _addOrUpdateItems(postList, index);
-        lakeAreasList[index]!.currentPage += 1;
+        lakeAreasDataList[index]!.currentPage += 1;
         success.call();
         notifyListeners();
       },
@@ -261,7 +298,7 @@ class LakeModel extends ChangeNotifier {
   Future<void> initPostList(int index,
       {OnSuccess? success, OnFailure? failure, bool reset = false}) async {
     if (reset) {
-      lakeAreasList[index]?.status = LakePageStatus.loading;
+      lakeAreasDataList[index]?.status = LakePageStatus.loading;
       notifyListeners();
     }
     await FeedbackService.getPosts(
@@ -271,17 +308,17 @@ class LakeModel extends ChangeNotifier {
       etag: index == 0 ? 'recommend' : '',
       onSuccess: (postList, totalPage) {
         tabControllerLoaded = true;
-        lakeAreasList[index]?.dataList.clear();
+        lakeAreasDataList[index]?.dataList.clear();
         _addOrUpdateItems(postList, index);
-        lakeAreasList[index]!.currentPage = 1;
-        lakeAreasList[index]!.status = LakePageStatus.idle;
+        lakeAreasDataList[index]!.currentPage = 1;
+        lakeAreasDataList[index]!.status = LakePageStatus.idle;
         notifyListeners();
         success?.call();
       },
       onFailure: (e) {
         ToastProvider.error(e.error.toString());
         checkTokenAndInitPostList(index);
-        lakeAreasList[index]!.status = LakePageStatus.error;
+        lakeAreasDataList[index]!.status = LakePageStatus.error;
         notifyListeners();
         failure?.call(e);
       },

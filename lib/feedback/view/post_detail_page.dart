@@ -669,7 +669,7 @@ class _PostDetailPageState extends State<PostDetailPage>
                                 onSuccess: () {
                                   final lake = context.read<LakeModel>();
                                   lake
-                                      .lakeAreasList[
+                                      .lakeAreasDataList[
                                           lake.tabList[lake.currentTab].id]!
                                       .refreshController
                                       .requestRefresh();
@@ -1149,7 +1149,7 @@ class _ManagerPopUpState extends State<ManagerPopUp>
       onWillPop: () async {
         context
             .read<LakeModel>()
-            .lakeAreasList[context
+            .lakeAreasDataList[context
                 .read<LakeModel>()
                 .tabList[context.read<LakeModel>().currentTab]
                 .id]
@@ -1373,7 +1373,7 @@ class _AnimatedOptionState extends State<AnimatedOption>
           onSuccess: () {
             context
                 .read<LakeModel>()
-                .lakeAreasList[context
+                .lakeAreasDataList[context
                     .read<LakeModel>()
                     .tabList[context.read<LakeModel>().currentTab]
                     .id]
@@ -1400,7 +1400,7 @@ class _AnimatedOptionState extends State<AnimatedOption>
                   isSelected = false;
                   context
                       .read<LakeModel>()
-                      .lakeAreasList[context
+                      .lakeAreasDataList[context
                           .read<LakeModel>()
                           .tabList[context.read<LakeModel>().currentTab]
                           .id]

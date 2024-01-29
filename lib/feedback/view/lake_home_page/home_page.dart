@@ -32,7 +32,7 @@ class FeedbackHomePage extends StatefulWidget {
   FeedbackHomePageState createState() => FeedbackHomePageState();
 }
 
-///这是论坛页面,也是微北洋最核心的部分
+///这是论坛页面
 class FeedbackHomePageState extends State<FeedbackHomePage>
     with AutomaticKeepAliveClientMixin, TickerProviderStateMixin {
 
@@ -47,8 +47,6 @@ class FeedbackHomePageState extends State<FeedbackHomePage>
   ///各标签页信息
   late final FbDepartmentsProvider _departmentsProvider;
 
-  ///简化代码
-  dynamic lakeModel() => context.read<LakeModel>();
 
   ///初始化页面
   void initPage() {
@@ -109,12 +107,12 @@ class FeedbackHomePageState extends State<FeedbackHomePage>
   */
   void listToTop() {
 
-    var tabControllerIndex = lakeModel().tabController.index;
-    var lakeAreasId = lakeModel().tabList[tabControllerIndex].id;
-    var lakeArea = lakeModel().lakeAreasList[lakeAreasId];
+    var tabControllerIndex = context.read<LakeModel>().tabController.index;
+    var lakeAreasId = context.read<LakeModel>().tabList[tabControllerIndex].id;
+    var lakeArea = context.read<LakeModel>().lakeAreasDataList[lakeAreasId];
 
     if (lakeArea!.controller.offset > 1500) {
-      var tabLakeArea = lakeModel().lakeAreasList[tabControllerIndex];
+      var tabLakeArea = context.read<LakeModel>().lakeAreasDataList[tabControllerIndex];
       tabLakeArea!.controller.jumpTo(1500);
     }
     lakeArea.controller.animateTo(
@@ -126,16 +124,16 @@ class FeedbackHomePageState extends State<FeedbackHomePage>
 
   void _onFeedbackTapped() {
 
-    if (!lakeModel().tabController.indexIsChanging) {
+    if (!context.read<LakeModel>().tabController.indexIsChanging) {
 
       if (canSee) {
-        lakeModel().onFeedbackOpen();
+        context.read<LakeModel>().onFeedbackOpen();
         fbKey.currentState?.tap();
         setState(() {
           canSee = false;
         });
       } else {
-        lakeModel().onFeedbackOpen();
+        context.read<LakeModel>().onFeedbackOpen();
         fbKey.currentState?.tap();
         setState(() {
           canSee = true;
@@ -153,8 +151,8 @@ class FeedbackHomePageState extends State<FeedbackHomePage>
 
     ///如果还没刷新
     if (initializeRefresh) {
-          lakeModel()
-          .lakeAreasList[lakeModel().tabController.index]!
+          context.read<LakeModel>()
+          .lakeAreasDataList[context.read<LakeModel>().tabController.index]!
           .controller
           .animateTo(-85,
               duration: Duration(milliseconds: 1000),
@@ -221,7 +219,7 @@ class FeedbackHomePageState extends State<FeedbackHomePage>
                     return loadingProvider.timeEnded
                         ? WButton(
                             onPressed: () {
-                              var model = lakeModel();
+                              var model = context.read<LakeModel>();
                               model.mainStatus = LakePageStatus.loading;
                               loadingProvider.resetTimer();
                               initPage();
@@ -248,7 +246,7 @@ class FeedbackHomePageState extends State<FeedbackHomePage>
                         // 使用弹性滚动物理效果
                         physics: BouncingScrollPhysics(),
                         // 使用LakeModel中的tabController控制选项卡
-                        controller: lakeModel().tabController,
+                        controller: context.read<LakeModel>().tabController,
                         // 设置选中标签的文本颜色
                         labelColor: ColorUtil.blue2CColor,
                         // 设置选中标签的文本样式
@@ -271,13 +269,13 @@ class FeedbackHomePageState extends State<FeedbackHomePage>
                             // 设置选项卡的文本内容
                             text: tabList[index].shortname,
                             // 如果选项卡的名称是'校务专区'，则显示下拉按钮
-                            withDropDownButton: tabList[index].name == '校务专区',
+                            withDropDownButton: tabList[index].shortname == '校务',
                           ),
                         ),
                         // 当用户点击选项卡时触发的回调函数
                         onTap: (index) {
                           // 如果选中的选项卡的id是1，执行_onFeedbackTapped函数
-                          if (tabList[index].id == 1) {
+                          if (tabList[index].shortname == '湖底') {
                             _onFeedbackTapped();
                           }
                         },
@@ -299,6 +297,7 @@ class FeedbackHomePageState extends State<FeedbackHomePage>
       ),
     );
 
+    //底下的页面
     return Scaffold(
       backgroundColor: ColorUtil.whiteFFColor,
       body: Stack(
@@ -315,8 +314,8 @@ class FeedbackHomePageState extends State<FeedbackHomePage>
                 return lakeModel.tabList;
               },
               builder: (_, tabs, __) {
-                if (!lakeModel().tabControllerLoaded) {
-                  lakeModel().tabController = TabController(
+                if (!context.read<LakeModel>().tabControllerLoaded) {
+                  context.read<LakeModel>().tabController = TabController(
                       length: tabs.length,
                       vsync: this,
                       initialIndex: min(max(0, tabs.length - 1), 1))
@@ -332,13 +331,13 @@ class FeedbackHomePageState extends State<FeedbackHomePage>
                               .animation!
                               .value) {
                         WPYTab tab =
-                            lakeModel().lakeAreasList[1]!.tab;
-                        if (lakeModel().tabController.index !=
+                            context.read<LakeModel>().lakeAreasDataList[1]!.tab;
+                        if (context.read<LakeModel>().tabController.index !=
                                 tabList.indexOf(tab) &&
                             canSee) _onFeedbackTapped();
-                        lakeModel().currentTab =
-                            lakeModel().tabController.index;
-                        lakeModel().onFeedbackOpen();
+                        context.read<LakeModel>().currentTab =
+                            context.read<LakeModel>().tabController.index;
+                        context.read<LakeModel>().onFeedbackOpen();
                       }
                     });
                 }
@@ -347,7 +346,7 @@ class FeedbackHomePageState extends State<FeedbackHomePage>
                     ? ListView(children: [SizedBox(height: 0.35.sh), Loading()])
                     : ExtendedTabBarView(
                         cacheExtent: cacheNum,
-                        controller: lakeModel().tabController,
+                        controller: context.read<LakeModel>().tabController,
                         children: List<Widget>.generate(
                           // 为什么判空去掉了 因为 tabList 每次清空都会被赋初值
                           tabs.length,

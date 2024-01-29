@@ -53,13 +53,13 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
   bool _onScrollNotification(ScrollNotification scrollInfo) {
     if (context
             .read<LakeModel>()
-            .lakeAreasList[index]!
+            .lakeAreasDataList[index]!
             .refreshController
             .isRefresh &&
         scrollInfo.metrics.pixels >= 2)
       context
           .read<LakeModel>()
-          .lakeAreasList[index]!
+          .lakeAreasDataList[index]!
           .refreshController
           .refreshToIdle();
     if (scrollInfo.metrics.pixels <
@@ -79,14 +79,14 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
   }
 
   onRefresh() async {
-    context.read<LakeModel>().lakeAreasList[index]?.status = LakePageStatus.loading;
+    context.read<LakeModel>().lakeAreasDataList[index]?.status = LakePageStatus.loading;
     FeedbackService.getToken(onResult: (_) {
       if (index == 0) context.read<FbHotTagsProvider>().initHotTags();
       getRecTag();
       context.read<LakeModel>().initPostList(index, success: () {
         context
             .read<LakeModel>()
-            .lakeAreasList[index]
+            .lakeAreasDataList[index]
             ?.refreshController
             .refreshCompleted();
       }, failure: (e) {
@@ -95,12 +95,12 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
             e.type == DioExceptionType.sendTimeout)
           context
               .read<LakeModel>()
-              .lakeAreasList[index]
+              .lakeAreasDataList[index]
               ?.refreshController
               .refreshToIdle();
         context
             .read<LakeModel>()
-            .lakeAreasList[index]
+            .lakeAreasDataList[index]
             ?.refreshController
             .refreshFailed();
       });
@@ -110,7 +110,7 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
       ToastProvider.error(e.error.toString());
       context
           .read<LakeModel>()
-          .lakeAreasList[index]
+          .lakeAreasDataList[index]
           ?.refreshController
           .refreshFailed();
     });
@@ -122,14 +122,14 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
       success: () {
         context
             .read<LakeModel>()
-            .lakeAreasList[index]
+            .lakeAreasDataList[index]
             ?.refreshController
             .loadComplete();
       },
       failure: (e) {
         context
             .read<LakeModel>()
-            .lakeAreasList[index]
+            .lakeAreasDataList[index]
             ?.refreshController
             .loadFailed();
       },
@@ -137,10 +137,10 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
   }
 
   void listToTop() {
-    if (context.read<LakeModel>().lakeAreasList[index]!.controller.offset > 1500) {
-      context.read<LakeModel>().lakeAreasList[index]!.controller.jumpTo(1500);
+    if (context.read<LakeModel>().lakeAreasDataList[index]!.controller.offset > 1500) {
+      context.read<LakeModel>().lakeAreasDataList[index]!.controller.jumpTo(1500);
     }
-    context.read<LakeModel>().lakeAreasList[index]!.controller.animateTo(-85,
+    context.read<LakeModel>().lakeAreasDataList[index]!.controller.animateTo(-85,
         duration: Duration(milliseconds: 400), curve: Curves.easeOutCirc);
   }
 
@@ -164,7 +164,7 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
     super.build(context);
 
     var status =
-        context.select((LakeModel model) => model.lakeAreasList[index]!.status);
+        context.select((LakeModel model) => model.lakeAreasDataList[index]!.status);
 
     return AnimatedSwitcher(
       duration: Duration(milliseconds: 300),
@@ -177,7 +177,7 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
                   physics: BouncingScrollPhysics(),
                   controller: context
                       .read<LakeModel>()
-                      .lakeAreasList[index]!
+                      .lakeAreasDataList[index]!
                       .refreshController,
                   header: ClassicHeader(
                     height: 5.h,
@@ -201,15 +201,15 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
                   onLoading: _onLoading,
                   child: ListView.builder(
                     controller:
-                        context.read<LakeModel>().lakeAreasList[index]!.controller,
+                        context.read<LakeModel>().lakeAreasDataList[index]!.controller,
                     shrinkWrap: true,
                     physics: NeverScrollableScrollPhysics(),
                     itemCount: context.select((LakeModel model) => index == 0
-                        ? model.lakeAreasList[index]!.dataList.values
+                        ? model.lakeAreasDataList[index]!.dataList.values
                                 .toList()
                                 .length +
                             3
-                        : model.lakeAreasList[index]!.dataList.values
+                        : model.lakeAreasDataList[index]!.dataList.values
                                 .toList()
                                 .length +
                             2),
@@ -271,7 +271,7 @@ class NSubPageState extends State<NSubPage> with AutomaticKeepAliveClientMixin {
                         ind--;
                         final post = context
                             .read<LakeModel>()
-                            .lakeAreasList[index]!
+                            .lakeAreasDataList[index]!
                             .dataList
                             .values
                             .toList()[ind];
