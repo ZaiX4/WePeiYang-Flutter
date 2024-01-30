@@ -299,21 +299,29 @@ class FeedbackHomePageState extends State<FeedbackHomePage>
 
     //底下的页面
     return Scaffold(
+
       backgroundColor: ColorUtil.whiteFFColor,
+
       body: Stack(
         children: [
+
           Padding(
+
             padding: EdgeInsets.only(
                 // 因为上面的空要藏住搜索框
                 top: MediaQuery.of(context).padding.top < searchBarHeight
                     ? searchBarHeight + tabBarHeight
                     : MediaQuery.of(context).padding.top + searchBarHeight,
                 bottom: 70.h - 18),
+
             child: Selector<LakeModel, List<WPYTab>>(
+
               selector: (BuildContext context, LakeModel lakeModel) {
                 return lakeModel.tabList;
               },
+
               builder: (_, tabs, __) {
+
                 if (!context.read<LakeModel>().tabControllerLoaded) {
                   context.read<LakeModel>().tabController = TabController(
                       length: tabs.length,
@@ -330,18 +338,24 @@ class FeedbackHomePageState extends State<FeedbackHomePage>
                               .tabController
                               .animation!
                               .value) {
+
                         WPYTab tab =
                             context.read<LakeModel>().lakeAreasDataList[1]!.tab;
+
                         if (context.read<LakeModel>().tabController.index !=
                                 tabList.indexOf(tab) &&
                             canSee) _onFeedbackTapped();
+
                         context.read<LakeModel>().currentTab =
                             context.read<LakeModel>().tabController.index;
+
                         context.read<LakeModel>().onFeedbackOpen();
                       }
+
                     });
                 }
                 int cacheNum = 0;
+
                 return tabs.length == 1
                     ? ListView(children: [SizedBox(height: 0.35.sh), Loading()])
                     : ExtendedTabBarView(
@@ -350,9 +364,12 @@ class FeedbackHomePageState extends State<FeedbackHomePage>
                         children: List<Widget>.generate(
                           // 为什么判空去掉了 因为 tabList 每次清空都会被赋初值
                           tabs.length,
-                          (i) => NSubPage(
+                          ///tabList[i].shortname!="评分"?
+                          (i) =>
+                          NSubPage(
                             index: tabList[i].id,
-                          ),
+                          )
+                          ,
                         ),
                       );
               },
